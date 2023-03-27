@@ -1,0 +1,18 @@
+Package: read.idfEnergyPlus
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Yujie",
+           family = "Xu",
+           role = c("aut", "cre"),
+           email = "yujiex@lbl.gov",
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: What the package does (one paragraph).
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+Imports:
+  magrittr,
+  dplyr,
+  assertthat
+RoxygenNote: 7.1.0
