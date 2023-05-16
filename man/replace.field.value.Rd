@@ -27,7 +27,7 @@ instances, then only the first chunk is replaced}
 \item{field.name}{name of the field whose value is to be retrieved}
 
 \item{fun}{if the new value is a function of the old value, pass the function
-here, to replace it with a specific value, pass in a constant function.
+here. To replace it with a specific value, pass in a constant function.
 The function input is a string}
 
 \item{verbose}{if true, print debug outputs}
