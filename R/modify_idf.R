@@ -218,7 +218,7 @@ get.field.idx <- function(lines, field.name, object.type="", object.name="", ver
     }
     sapply(seq_along(location.obj.line.start), function(i) {
         for (field.line in all.field.lines) {
-            if ((location.obj.line.start[[i]] < field.line) && (field.line < location.obj.line.end[[i]])) {
+            if ((location.obj.line.start[[i]] < field.line) && (field.line <= location.obj.line.end[[i]])) {
                 return(field.line)
             }
         }
@@ -244,6 +244,17 @@ get.field.value <- function(lines, field.name, object.type="", object.name="", v
     sapply(field.lines, function(field.line.idx) unlist(stringr::str_split(lines[field.line.idx], "[,;]"))[[1]])
 }
 
+#' get the value part from a line
+#'
+#' The field value ends with either a "," or a ";". This function retrieves the part before a "," or ";" for a given line
+#'
+#' @param field.lines a line whose value needs to be parsed
+#' @return the portion before the first "," or a ";"
+get.field.value.from.one.line <- function(field.line) {
+    delim.idx <- unlist(gregexpr("[,;]", field.line))
+    substr(field.line, 1, delim.idx - 1)
+}
+
 #' replace the value of a field in idf file
 #'
 #' replace value of a field in idf file
@@ -258,7 +269,7 @@ get.field.value <- function(lines, field.name, object.type="", object.name="", v
 #'     instances, then only the first chunk is replaced
 #' @param field.name name of the field whose value is to be retrieved
 #' @param fun if the new value is a function of the old value, pass the function
-#'     here, to replace it with a specific value, pass in a constant function.
+#'     here. To replace it with a specific value, pass in a constant function.
 #'     The function input is a string
 #' @param verbose if true, print debug outputs
 #' @return a vector of lines with the value replaced
@@ -296,4 +307,25 @@ apply.fun.to.files <- function(files, path, fun, ...) {
     }) %>%
         dplyr::bind_rows() %>%
         {.}
+}
+
+#' Read a schedule object into a data frame
+#'
+#' @param schedule.type first line of a schedule object, like "Schedule:Day:Interval,"
+#' @param schedule.name object name, like "single_family_first_story heating week 0 Sunday,"
+#' @return a dataframe with two columns with string type, "time" and "value". The "time" column contains the value of the schedule.
+read.schedule <- function(lines, schedule.type, schedule.name, verbose=FALSE) {
+    result = get.start.end.idx(lines, object.type=schedule.type, object.name=schedule.name, verbose)
+    location.obj.line.start = result$start.idx.lst
+    location.obj.line.end = result$end.idx.lst
+    object.lines = lines[location.obj.line.start:location.obj.line.end]
+    print(sprintf("found schedule line %d to line %d", location.obj.line.start, location.obj.line.end))
+    schedule.time.lines.idx = which(sapply(object.lines, function(x) {any(stringr::str_detect(x, sprintf("%02d:00", 1:24)))}))
+    if(verbose) {
+        print(sprintf("schedule time lines: %s", paste(schedule.time.lines.idx, collapse = " ")))
+    }
+    schedule.value.lines.idx = schedule.time.lines.idx + 1
+    schedule.time = sapply(object.lines[schedule.time.lines.idx], get.field.value.from.one.line)
+    schedule.value = sapply(object.lines[schedule.value.lines.idx], get.field.value.from.one.line)
+    tibble::tibble(time=schedule.time, value=schedule.value)
 }
